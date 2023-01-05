@@ -17,7 +17,7 @@ import {PullPayment} from "@openzeppelin/contracts/security/PullPayment.sol";
  * creates a new Creator smart contract for each.
  */
 contract dOnlyFans {
-    mapping(address => Creator) public creators;
+    mapping(address => address) public creatorsContract;
 
     event NewCreatorProfileCreated(
         address creatorAddress,
@@ -27,14 +27,19 @@ contract dOnlyFans {
     error CreatorAlreadyExists();
 
     function createProfile(uint256 price) public {
-        // if ((creators[msg.sender].CCaddress()) == msg.sender) {
+        // if ((creatorsContract[msg.sender]) != address(0)) {
         //     // the creator profile already exists
         //     revert CreatorAlreadyExists();
         // }
-        //address[] storage _subs = subs;
         Creator creator = new Creator(msg.sender, price);
-        creators[msg.sender] = creator;
+        creatorsContract[msg.sender] = address(creator);
         emit NewCreatorProfileCreated(msg.sender, address(creator));
+    }
+
+    function getCreatorContractAddress(
+        address creatorAddress
+    ) public view returns (address) {
+        return creatorsContract[creatorAddress];
     }
 }
 

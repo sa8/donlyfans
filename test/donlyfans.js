@@ -5,6 +5,7 @@ const { loadFixture } = require("@nomicfoundation/hardhat-network-helpers");
 describe("dOnlyFans main contract", function () {
   it("Should create a new Creator Profile and add it to list of creators", async function () {
     const dOnlyFans = await ethers.getContractFactory("dOnlyFans");
+    const [owner, addr1, addr2] = await ethers.getSigners();
 
     const hardhatDOnlyFans = await dOnlyFans.deploy();
 
@@ -12,8 +13,13 @@ describe("dOnlyFans main contract", function () {
 
     const createProfile = await hardhatDOnlyFans.createProfile(2);
     const receipt = await createProfile.wait();
+    await expect(hardhatDOnlyFans.createProfile(2)).to.emit(
+      hardhatDOnlyFans,
+      "NewCreatorProfileCreated"
+    );
+    // .withArgs(owner.address, receiverContract.address, tokenId);
     // console.log("Address of first CC: ");
-    // console.log();
+    // console.log(hardhatDOnlyFans.getCreatorContractAddress(addr1.address));
     // console.log(receipt.events[0].args.creatorContractAddress);
   });
 });
