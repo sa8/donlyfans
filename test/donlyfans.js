@@ -12,15 +12,27 @@ describe("dOnlyFans main contract", function () {
     await hardhatDOnlyFans.deployed();
 
     const createProfile = await hardhatDOnlyFans.createProfile(2);
-    const receipt = await createProfile.wait();
-    await expect(hardhatDOnlyFans.createProfile(2)).to.emit(
-      hardhatDOnlyFans,
-      "NewCreatorProfileCreated"
+    const contractAddress = await hardhatDOnlyFans.getCreatorContractAddress(
+      owner.address
     );
-    // .withArgs(owner.address, receiverContract.address, tokenId);
-    // console.log("Address of first CC: ");
-    // console.log(hardhatDOnlyFans.getCreatorContractAddress(addr1.address));
-    // console.log(receipt.events[0].args.creatorContractAddress);
+    const receipt = await createProfile.wait();
+
+    //check that event is emitted
+    await expect(createProfile)
+      .to.emit(hardhatDOnlyFans, "NewCreatorProfileCreated")
+      .withArgs(owner.address, contractAddress);
+
+    // check that address is added to mapping correctly
+    await expect(
+      await hardhatDOnlyFans.creatorsContract(owner.address)
+    ).to.equal(contractAddress);
+
+    // test contract
+    const MyContract = await ethers.getContractFactory("Creator");
+    const contract = await MyContract.attach(
+      contractAddress // The deployed contract address
+    );
+    await expect(owner.address).to.equal(await contract.CCaddress());
   });
 });
 
