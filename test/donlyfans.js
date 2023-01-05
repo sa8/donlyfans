@@ -2,10 +2,8 @@ const { ethers } = require("hardhat");
 const { expect } = require("chai");
 const { loadFixture } = require("@nomicfoundation/hardhat-network-helpers");
 
-describe("dOnlyFans contract", function () {
-  async function deployDOnlyFansFixture() {
-    const [owner, addr1, addr2] = await ethers.getSigners();
-
+describe("dOnlyFans main contract", function () {
+  it("Should create a new Creator Profile and add it to list of creators", async function () {
     const dOnlyFans = await ethers.getContractFactory("dOnlyFans");
 
     const hardhatDOnlyFans = await dOnlyFans.deploy();
@@ -13,43 +11,53 @@ describe("dOnlyFans contract", function () {
     await hardhatDOnlyFans.deployed();
 
     const createProfile = await hardhatDOnlyFans.createProfile(2);
+    const receipt = await createProfile.wait();
+    // console.log("Address of first CC: ");
+    // console.log();
+    // console.log(receipt.events[0].args.creatorContractAddress);
+  });
+});
 
-    const firstSubscription = await hardhatDOnlyFans
-      .connect(addr1)
-      .subscribe(owner.address, {
-        value: ethers.utils.parseEther("2.0"),
-      });
+describe("Creator contract", function () {
+  async function deployCreatorContractFixture() {
+    const [owner, addr1, addr2] = await ethers.getSigners();
+
+    const creator = await ethers.getContractFactory("Creator");
+
+    const hardhatCreator = await creator.deploy(owner.address, 2);
+
+    await hardhatCreator.deployed();
+
+    const firstSubscription = await hardhatCreator.connect(addr1).subscribe({
+      value: ethers.utils.parseEther("2.0"),
+    });
 
     // Fixtures can return anything you consider useful for your tests
-    return { dOnlyFans, hardhatDOnlyFans, owner, addr1, addr2 };
+    return { creator, hardhatCreator, owner, addr1, addr2 };
   }
   it("Verify subscription", async function () {
-    const { hardhatDOnlyFans, owner, addr1 } = await loadFixture(
-      deployDOnlyFansFixture
+    const { hardhatCreator, owner, addr1 } = await loadFixture(
+      deployCreatorContractFixture
     );
-    //console.log(createProfile);
-    const [subs] = await hardhatDOnlyFans.getSubscribers(owner.address);
+    const [subs] = await hardhatCreator.getSubscribers();
     console.log(subs);
     console.log(addr1.address);
     expect(subs).to.equal(addr1.address);
   });
 
-  // it("Unsubscribing", async function () {
-  //   const { hardhatDOnlyFans, owner, addr1, addr2 } = await loadFixture(
-  //     deployDOnlyFansFixture
-  //   );
-  //   const secondSubscription = await hardhatDOnlyFans
-  //     .connect(addr2)
-  //     .subscribe(owner.address, {
-  //       value: ethers.utils.parseEther("2.0"),
-  //     });
+  it("Unsubscribing", async function () {
+    const { hardhatCreator, owner, addr1, addr2 } = await loadFixture(
+      deployCreatorContractFixture
+    );
+    const secondSubscription = await hardhatCreator.connect(addr2).subscribe({
+      value: ethers.utils.parseEther("2.0"),
+    });
+    // const subs_intermediary = await hardhatCreator.getSubscribers();
+    // console.log(subs_intermediary);
+    const unsub = await hardhatCreator.connect(addr1).unsubscribe();
 
-  //   const unsub = await hardhatDOnlyFans
-  //     .connect(addr1)
-  //     .unsubscribe(owner.address);
-
-  //   const subs = await hardhatDOnlyFans.getSubscribers(owner.address);
-  //   console.log(subs);
-  //   //expect(subs).to.equal(addr2.address);
-  // });
+    const [sub1, sub2] = await hardhatCreator.getSubscribers();
+    expect(sub2).to.equal(addr2.address);
+    expect(sub1).to.equal("0x0000000000000000000000000000000000000000"); // this indicates that sub1 has been removed
+  });
 });

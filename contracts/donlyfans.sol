@@ -19,15 +19,22 @@ import {PullPayment} from "@openzeppelin/contracts/security/PullPayment.sol";
 contract dOnlyFans {
     mapping(address => Creator) public creators;
 
-    function createProfile(uint256 price) public returns (bool) {
-        if ((creators[msg.sender].CCaddress()) == msg.sender) {
-            // the creator profile already exists
-            return false;
-        }
+    event NewCreatorProfileCreated(
+        address creatorAddress,
+        address creatorContractAddress
+    );
+
+    error CreatorAlreadyExists();
+
+    function createProfile(uint256 price) public {
+        // if ((creators[msg.sender].CCaddress()) == msg.sender) {
+        //     // the creator profile already exists
+        //     revert CreatorAlreadyExists();
+        // }
         //address[] storage _subs = subs;
         Creator creator = new Creator(msg.sender, price);
         creators[msg.sender] = creator;
-        return true;
+        emit NewCreatorProfileCreated(msg.sender, address(creator));
     }
 }
 
@@ -70,15 +77,14 @@ contract Creator is PullPayment {
         withdrawPayments(payable(msg.sender));
     }
 
-    // function unsubscribe(address creatorAddress) public {
-    //     Creator memory creator = creators[creatorAddress];
-    //     if (!creator.isCreator) revert CreatorDoesNotExist();
-    //     for (uint i; i < creator.subscribers.length; i++) {
-    //         if (msg.sender == creator.subscribers[i]) {
-    //             delete creator.subscribers[i];
-    //             return;
-    //         }
-    //     }
-    //     revert NotSubscriber();
-    // }
+    function unsubscribe() public {
+        if (!isCreator) revert CreatorDoesNotExist();
+        for (uint i; i < subscribers.length; i++) {
+            if (msg.sender == subscribers[i]) {
+                delete subscribers[i];
+                return;
+            }
+        }
+        revert NotSubscriber();
+    }
 }
