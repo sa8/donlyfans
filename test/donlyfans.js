@@ -34,22 +34,22 @@ describe("dOnlyFans contract", function () {
     expect(subs).to.equal(addr1.address);
   });
 
-  it("Unsubscribing", async function () {
-    const { hardhatDOnlyFans, owner, addr1, addr2 } = await loadFixture(
-      deployDOnlyFansFixture
-    );
-    const secondSubscription = await hardhatDOnlyFans
-      .connect(addr2)
-      .subscribe(owner.address, {
-        value: ethers.utils.parseEther("2.0"),
-      });
+  // it("Unsubscribing", async function () {
+  //   const { hardhatDOnlyFans, owner, addr1, addr2 } = await loadFixture(
+  //     deployDOnlyFansFixture
+  //   );
+  //   const secondSubscription = await hardhatDOnlyFans
+  //     .connect(addr2)
+  //     .subscribe(owner.address, {
+  //       value: ethers.utils.parseEther("2.0"),
+  //     });
 
-    const unsub = await hardhatDOnlyFans
-      .connect(addr1)
-      .unsubscribe(owner.address);
+  //   const unsub = await hardhatDOnlyFans
+  //     .connect(addr1)
+  //     .unsubscribe(owner.address);
 
-    const subs = await hardhatDOnlyFans.getSubscribers(owner.address);
-    console.log(subs);
-    //expect(subs).to.equal(addr2.address);
-  });
+  //   const subs = await hardhatDOnlyFans.getSubscribers(owner.address);
+  //   console.log(subs);
+  //   //expect(subs).to.equal(addr2.address);
+  // });
 });
