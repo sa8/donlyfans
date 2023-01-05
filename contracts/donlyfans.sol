@@ -4,6 +4,14 @@ pragma solidity ^0.8.0;
 
 import {PullPayment} from "@openzeppelin/contracts/security/PullPayment.sol";
 
+/**
+ * @title dOnlyFans Basic Smart Contract
+ * @author Sarah Azouvi
+ * @notice This contract allows a content creator (CC) to create a new profile and to set their price. Users
+ * can then subscribe to the CC profile by paying the required price.
+ * @dev This is meant as a "play around" contract to learn about solidity and EVM and certainly not a final product.
+ */
+
 struct Creator {
     address CCaddress;
     uint256 price;
