@@ -11,7 +11,7 @@ describe("dOnlyFans main contract", function () {
 
     await hardhatDOnlyFans.deployed();
 
-    const createProfile = await hardhatDOnlyFans.createProfile(2);
+    const createProfile = await hardhatDOnlyFans.createProfile(2, 7);
     const contractAddress = await hardhatDOnlyFans.getCreatorContractAddress(
       owner.address
     );
@@ -42,7 +42,7 @@ describe("Creator contract", function () {
 
     const creator = await ethers.getContractFactory("Creator");
 
-    const hardhatCreator = await creator.deploy(owner.address, 2);
+    const hardhatCreator = await creator.deploy(owner.address, 2, 7);
 
     await hardhatCreator.deployed();
 

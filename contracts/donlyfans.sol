@@ -26,12 +26,12 @@ contract dOnlyFans {
 
     error CreatorAlreadyExists();
 
-    function createProfile(uint256 price) public {
+    function createProfile(uint256 price, uint256 period) public {
         // if ((creatorsContract[msg.sender]) != address(0)) {
         //     // the creator profile already exists
         //     revert CreatorAlreadyExists();
         // }
-        Creator creator = new Creator(msg.sender, price);
+        Creator creator = new Creator(msg.sender, price, period);
         creatorsContract[msg.sender] = address(creator);
         emit NewCreatorProfileCreated(msg.sender, address(creator));
     }
@@ -46,6 +46,7 @@ contract dOnlyFans {
 contract Creator is PullPayment {
     address public CCaddress;
     uint256 public price;
+    uint256 public subscriptionPeriod; // in days. CC can choose whether to have monthly, weekly etc subscriptions
     address[] private subscribers; // list of subscribers
     bool private isCreator;
     bool public isVerified;
@@ -63,6 +64,7 @@ contract Creator is PullPayment {
     error CreatorDoesNotExist();
     error NotSubscriber();
     error Creator__NotOwner();
+    error Creator__PriceCannotBeNegative();
 
     modifier onlyOwner() {
         // require(msg.sender == owner);
@@ -70,9 +72,11 @@ contract Creator is PullPayment {
         _;
     }
 
-    constructor(address _address, uint256 _price) {
+    constructor(address _address, uint256 _price, uint256 _period) {
+        if (_price <= 0) revert Creator__PriceCannotBeNegative();
         CCaddress = _address;
         price = _price;
+        subscriptionPeriod = _period;
         isCreator = true;
     }
 
@@ -80,6 +84,7 @@ contract Creator is PullPayment {
         // Creator storage creator = creators[creatorAddress];
         // if (!creator.isCreator) revert CreatorDoesNotExist();
         if (msg.value < price) revert InsufficientFunds();
+        if (msg.value % price != 0) revert InsufficientFunds(); // can only subscribe for full periods
         subscribers.push(msg.sender);
         _asyncTransfer(CCaddress, msg.value);
 
@@ -88,7 +93,7 @@ contract Creator is PullPayment {
             msg.sender,
             true,
             block.timestamp,
-            block.timestamp + 30 days
+            block.timestamp + (msg.value / price) * subscriptionPeriod * 1 days
         );
     }
 
