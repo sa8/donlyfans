@@ -64,7 +64,6 @@ contract Creator is PullPayment {
     error CreatorDoesNotExist();
     error NotSubscriber();
     error Creator__NotOwner();
-    error Creator__PriceCannotBeNegative();
 
     modifier onlyOwner() {
         // require(msg.sender == owner);
@@ -73,7 +72,6 @@ contract Creator is PullPayment {
     }
 
     constructor(address _address, uint256 _price, uint256 _period) {
-        if (_price <= 0) revert Creator__PriceCannotBeNegative();
         CCaddress = _address;
         price = _price;
         subscriptionPeriod = _period;
@@ -88,13 +86,25 @@ contract Creator is PullPayment {
         subscribers.push(msg.sender);
         _asyncTransfer(CCaddress, msg.value);
 
-        // @dev currently doing monthly subscription, will make it configurable later
-        users[msg.sender] = User(
-            msg.sender,
-            true,
-            block.timestamp,
-            block.timestamp + (msg.value / price) * subscriptionPeriod * 1 days
-        );
+        if (price <= 0) {
+            users[msg.sender] = User(
+                msg.sender,
+                true,
+                block.timestamp,
+                block.timestamp + subscriptionPeriod * 1 days
+            );
+        } else {
+            // @dev currently doing monthly subscription, will make it configurable later
+            users[msg.sender] = User(
+                msg.sender,
+                true,
+                block.timestamp,
+                block.timestamp +
+                    (msg.value / price) *
+                    subscriptionPeriod *
+                    1 days
+            );
+        }
     }
 
     function getSubscribers() public view returns (address[] memory) {
