@@ -78,4 +78,12 @@ describe("Creator contract", function () {
     expect(sub2).to.equal(addr2.address);
     expect(sub1).to.equal("0x0000000000000000000000000000000000000000"); // this indicates that sub1 has been removed
   });
+
+  it("Verify isSubscriber function", async function () {
+    const { hardhatCreator, owner, addr1, addr2 } = await loadFixture(
+      deployCreatorContractFixture
+    );
+    expect(await hardhatCreator.isSubscriber(addr1.address)).to.equal(true);
+    expect(await hardhatCreator.isSubscriber(addr2.address)).to.equal(false);
+  });
 });

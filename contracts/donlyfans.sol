@@ -48,6 +48,16 @@ contract Creator is PullPayment {
     uint256 public price;
     address[] private subscribers; // list of subscribers
     bool private isCreator;
+    bool public isVerified;
+
+    struct User {
+        address UserAddress;
+        bool isActive;
+        uint256 subscriptionStart;
+        uint256 subscriptionEnd;
+    }
+
+    mapping(address => User) private users;
 
     error InsufficientFunds();
     error CreatorDoesNotExist();
@@ -72,6 +82,14 @@ contract Creator is PullPayment {
         if (msg.value < price) revert InsufficientFunds();
         subscribers.push(msg.sender);
         _asyncTransfer(CCaddress, msg.value);
+
+        // @dev currently doing monthly subscription, will make it configurable later
+        users[msg.sender] = User(
+            msg.sender,
+            true,
+            block.timestamp,
+            block.timestamp + 30 days
+        );
     }
 
     function getSubscribers() public view returns (address[] memory) {
@@ -82,14 +100,33 @@ contract Creator is PullPayment {
         withdrawPayments(payable(msg.sender));
     }
 
-    function unsubscribe() public {
+    function removeSubscriber(address user) private {
         if (!isCreator) revert CreatorDoesNotExist();
         for (uint i; i < subscribers.length; i++) {
-            if (msg.sender == subscribers[i]) {
+            if (user == subscribers[i]) {
                 delete subscribers[i];
                 return;
             }
         }
         revert NotSubscriber();
+    }
+
+    function unsubscribe() public {
+        // to do: get refund if unsuscribe before the end of the period paid for
+        removeSubscriber(msg.sender);
+    }
+
+    function blockUser(address user) public onlyOwner {
+        removeSubscriber(user);
+    }
+
+    // check if user's subscription is still valid
+    function isSubscriber(address userAddress) public view returns (bool) {
+        User memory user = users[userAddress];
+        if (block.timestamp > user.subscriptionEnd) {
+            user.isActive = false;
+            return false;
+        }
+        return true;
     }
 }
